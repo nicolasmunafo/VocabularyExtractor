@@ -6,15 +6,16 @@ from typing import List
 import ast
 
 class AIModel():
-    def __init__(self):
-        pass
+    def __init__(self, ollama_url: str):
+        self._ollama_url = ollama_url
 
     def respond_prompt(self, prompt_text: str) -> List[List[str]]:
         prompt = """Can you translate these German words in Spanish and English? Lernziele, Ausbildung, Zollinhaltserklärung. 
         Just with one or two short translations of each word.
         Can you also write the results as python lists, [[word1, translation spanish, translation english], [word2, translation spanish, translation english]]"""
 
-        ollama_url = 'http://localhost:11434/api/generate'
+        ollama_url = self._ollama_url
+        # ollama_url = 'http://localhost:11434/api/generate'
         
         payload = {
             "model": "phi3",
