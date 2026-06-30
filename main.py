@@ -4,8 +4,8 @@ from typing import List
 import numpy as np
 import re
 from VocabularyLLM import AIModel
-# import asyncio
-# from winocr import recognize_pil
+from Config.config_reader import ConfigReader
+
 import os
 import pytesseract
 import easyocr
@@ -48,10 +48,12 @@ def cleanup_list(img_text: List[str]):
 
         
 
-def save_contents_file(words_list: List[List[str]]):
+def save_contents_file(words_list: List[List[str]], config_reader: ConfigReader):
     
-    credentials_path = Path.cwd() / "VocabularyExtractor" / "carbon-vault-500208-h2-731a20096a02.json"
-    SAMPLE_SPREADSHEET_ID = "1jJ7F6uaVSznuRKUCVaU5Qg5NcWwlv3K1iAl0zzxUlH4"
+    credentials_path = Path.cwd() / config_reader.gsheets_credential
+    SAMPLE_SPREADSHEET_ID = config_reader.sheet_id   
+    # credentials_path = Path.cwd() / "VocabularyExtractor" / "carbon-vault-500208-h2-731a20096a02.json"
+    # SAMPLE_SPREADSHEET_ID = "1jJ7F6uaVSznuRKUCVaU5Qg5NcWwlv3K1iAl0zzxUlH4"
 
     gc = gspread.service_account(filename=credentials_path)
     sh = gc.open_by_key(SAMPLE_SPREADSHEET_ID)
@@ -62,33 +64,62 @@ def save_contents_file(words_list: List[List[str]]):
 
 def main():
     
-    words_list =[]
+    words_list = []
 
-    lektion_path = Path("C:/Users/Nicolas/GitHub/Automation_Py/VocabularyExtractor/Images/Lektion 1/")
+    config_reader = ConfigReader()
 
-    print("test")
+    lektion_path = Path(config_reader.images_path) / "Lektion 1" 
+
     img_files = get_files_from_dir(lektion_path)
 
     # words_list = ["Zutaten", "Postleitzahl", "Diversidad", "Zoll", "Briefumschlag"]
 
-    ollama_model = AIModel()
+    ollama_model = AIModel(config_reader.ollama_url)
 
     for img in img_files:
         img_text = get_text_from_img(img)
         # add_translation_list(img_text)
         words_list.append(add_translation_list(img_text))
-        # break
+        break
 
     # words_list = [["Lernziele", "Objetivos de aprendizaje", "Educational goals"], ["Ausbildung", "Formación profesional", "Professional training"], ["Zollinhaltserklärung", "Declaración del contenido fiscal", "Fiscal content declaration"]]
     
-    response = ollama_model.respond_prompt(f"""Can you translate these German words in Spanish and English? {words_list}. 
-        Just with one or two short translations of each word.
-        Can you also write the results as python lists, [[word1, translation spanish, translation english], [word2, translation spanish, translation english]].
-                                           Do not write anything else but just the list""")
+    prompt = f"""
+            You are a translation engine. 
+            Translate each German word into Spanish and English.
 
-    save_contents_file(response)
+            Return ONLY a list of lists in this exact format:
+            [
+            ["word", "spanish", "english"],
+            ...
+            ]
+
+            Rules:
+            - No explanations.
+            - No extra text.
+            - No extra fields.
+            - No synonyms beyond one translation per language.
+            - Do NOT add punctuation outside the JSON.
+            - If you were not able to find a translation, just leave it blank, but always create a list of lists with three elements each, no more, no less
+
+            Words: {words_list}
+            """
+
+    response = ollama_model.respond_prompt(prompt)
+
+    # save_contents_file(words_list, config_reader)
+    save_contents_file(response, config_reader)
 
     
     
 if __name__ == "__main__":
     main()
+
+
+'''
+TODO:
+- Refactor
+- Test with direct translations
+- Modify the response 
+
+'''
