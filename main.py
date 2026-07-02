@@ -18,7 +18,8 @@ def add_translation_list(img_text: List[str], ollama_model: AIModel) -> List[Lis
     # Remove any strings that are not proper words
     final_list = cleanup_list(img_text)
     translator = WordsTranslator()
-    translation_list = translator.get_translations_api(final_list, "google")
+    # translation_list = translator.get_translations_api(final_list, "google")
+    translation_list = translator.get_translations_llm_complete(final_list, ollama_model)
     return translation_list
 
 

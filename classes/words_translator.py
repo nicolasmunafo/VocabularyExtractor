@@ -53,26 +53,15 @@ class WordsTranslator:
         
         return translated_list
     
+    def get_translations_llm_complete(self, final_list: List[str], ollama_model: AIModel) -> List[List[str]]:
+        translated_list: List[List[str]]
+        
+        prompt = f"""
+                Translate the following German words into Spanish and English: {final_list}.
+                For each word, generate a list containing exactly three strings in this specific order:
+                ["german_word", "spanish_translation", "english_translation"]
+                """
 
-    # prompt = f"""
-    #         You are a translation engine. 
-    #         Translate each German word into Spanish and English.
-
-    #         Return ONLY a list of lists in this exact format:
-    #         [
-    #         ["word", "spanish", "english"],
-    #         ...
-    #         ]
-
-    #         Rules:
-    #         - No explanations.
-    #         - No extra text.
-    #         - No extra fields.
-    #         - No synonyms beyond one translation per language.
-    #         - Do NOT add punctuation outside the JSON.
-    #         - If you were not able to find a translation, just leave it blank, but always create a list of lists with three elements each, no more, no less
-
-    #         Words: {words_list}
-    #         """
-
-    # response = ollama_model.respond_prompt(prompt)
+        translated_list = ollama_model.respond_prompt_list(prompt)
+        
+        return translated_list
