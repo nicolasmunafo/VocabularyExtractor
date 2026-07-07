@@ -49,8 +49,10 @@ class AIModel():
         )
 
         try:
-            raw_content = response["message"]["content"]
-            translations = json.loads(raw_content)
+            raw_content = response["message"]["content"]        # 1. Get the raw text content string from the response object
+            translations = json.loads(raw_content)              # 2. Convert that string explicitly into a native Python dictionary
+            translations_list = translations['translations']    # 3. Pull the key. This will be a standard list of lists
         except Exception as e:
             print(f"Parsing error: {e}")
-        return translations
+        
+        return translations_list
